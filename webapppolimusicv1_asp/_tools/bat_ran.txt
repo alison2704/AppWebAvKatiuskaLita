@@ -1,0 +1,6 @@
+=== webapppolimusicv1_asp desplegar.bat (sin privilegios) === 
+Inicio : 16/10/2026 11:10:51.58 
+Usuario: katy_ 
+Elevacion requerida: solicitando UAC 
+Elevacion requerida: solicitando UAC 
+Resultado de Start-Process (0 = se lanzo el proceso elevado): 0 

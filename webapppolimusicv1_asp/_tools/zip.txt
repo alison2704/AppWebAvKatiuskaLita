@@ -1,0 +1,5 @@
+﻿ZIP regenerado: 13028.2 KB  (C:\Users\katy_\git\AppWebAvKatiuskaLita\webapppolimusicv1_asp\webapppolimusicv1_asp_corregido.zip)
+Incluye las correcciones:
+  - FormVal sin Request.Form tras BinaryRead (ASP 0207)
+  - id leido con FormVal en los formularios multipart
+  - ruta base /webapppolimusicv1_asp

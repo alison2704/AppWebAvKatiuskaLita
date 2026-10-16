@@ -1,0 +1,58 @@
+﻿=== Despliegue webapppolimusicv1_asp 10/16/2026 11:10:54 ===
+[2026-10-16 11:10:54] [INFO] Iniciando despliegue de webapppolimusicv1_asp
+[2026-10-16 11:10:54] [INFO] Origen  : C:\Users\katy_\git\AppWebAvKatiuskaLita\webapppolimusicv1_asp\src
+[2026-10-16 11:10:54] [INFO] Destino : C:\inetpub\wwwroot\webapppolimusicv1_asp
+[2026-10-16 11:10:54] [INFO] App IIS : Default Web Site/webapppolimusicv1_asp
+[2026-10-16 11:10:54] [INFO] App Pool: webapppolimusicv1_asp
+[2026-10-16 11:10:54] [INFO] URL     : http://localhost/webapppolimusicv1_asp/
+[2026-10-16 11:10:54] [INFO] Ejecutando como administrador: True
+[2026-10-16 11:10:54] [INFO] Carpeta de origen validada: C:\Users\katy_\git\AppWebAvKatiuskaLita\webapppolimusicv1_asp\src
+[2026-10-16 11:10:54] [WARN] Detener app pool webapppolimusicv1_asp -> codigo 1168 : ERROR ( message:Cannot find APPPOOL object with identifier "webapppolimusicv1_asp". )
+[2026-10-16 11:10:54] [INFO] Copia de archivos completada (robocopy rc=3)
+[2026-10-16 11:10:54] [INFO] ASP Clasico disponible (asp.dll presente)
+[2026-10-16 11:10:54] [INFO] Crear app pool webapppolimusicv1_asp -> OK APPPOOL object "webapppolimusicv1_asp" added
+[2026-10-16 11:10:54] [INFO] Configurar app pool (32 bits desactivado) -> OK APPPOOL object "webapppolimusicv1_asp" changed
+[2026-10-16 11:10:54] [INFO] Configurar app pool (identidad ApplicationPoolIdentity) -> OK APPPOOL object "webapppolimusicv1_asp" changed
+[2026-10-16 11:10:54] [INFO] Configurar app pool (inicio automatico) -> OK APPPOOL object "webapppolimusicv1_asp" changed
+[2026-10-16 11:10:54] [WARN] Eliminar aplicacion existente -> codigo 50 : ERROR ( message:Must use exact identifer for APP object with verb DELETE. )
+[2026-10-16 11:10:54] [INFO] Crear aplicacion webapppolimusicv1_asp -> OK APP object "Default Web Site/webapppolimusicv1_asp" added
+VDIR object "Default Web Site/webapppolimusicv1_asp" added
+[2026-10-16 11:10:54] [INFO] Asignar app pool a la aplicacion -> OK APP object "Default Web Site/webapppolimusicv1_asp" changed
+[2026-10-16 11:10:55] [INFO] Retirar aplicacion anterior 'PoliMusic' -> OK APP object "Default Web Site/PoliMusic" deleted
+[2026-10-16 11:10:58] [INFO] Detener app pool anterior 'PoliMusicAppPool' -> OK "PoliMusicAppPool" successfully stopped
+[2026-10-16 11:10:58] [INFO] Retirar app pool anterior 'PoliMusicAppPool' -> OK APPPOOL object "PoliMusicAppPool" deleted
+[2026-10-16 11:10:58] [INFO] Carpeta del despliegue anterior eliminada: C:\inetpub\wwwroot\PoliMusic
+[2026-10-16 11:10:58] [INFO] ASP: maxRequestEntityAllowed = 50 MB -> OK Applied configuration changes to section "system.webServer/asp" for "MACHINE/WEBROOT/APPHOST" at configuration commit path "MACHINE/WEBROOT/APPHOST"
+[2026-10-16 11:10:58] [INFO] ASP: errores detallados en el navegador -> OK Applied configuration changes to section "system.webServer/asp" for "MACHINE/WEBROOT/APPHOST" at configuration commit path "MACHINE/WEBROOT/APPHOST"
+[2026-10-16 11:10:59] [INFO] ASP: sesiones habilitadas (60 min) -> OK Applied configuration changes to section "system.webServer/asp" for "MACHINE/WEBROOT/APPHOST" at configuration commit path "MACHINE/WEBROOT/APPHOST"
+[2026-10-16 11:10:59] [INFO] RequestFiltering: maxAllowedContentLength = 50 MB -> OK Applied configuration changes to section "system.webServer/security/requestFiltering" for "MACHINE/WEBROOT/APPHOST" at configuration commit path "MACHINE/WEBROOT/APPHOST"
+[2026-10-16 11:10:59] [WARN] MIME: .webp -> codigo 183 : ERROR ( message:New mimeMap object missing required attributes. Cannot add duplicate collection entry of type 'mimeMap' with unique key attribute 'fileExtension' set to '.webp'
+
+. )
+[2026-10-16 11:10:59] [INFO] MIME: .m4a (quitar si existia) -> OK Applied configuration changes to section "system.webServer/staticContent" for "MACHINE/WEBROOT/APPHOST" at configuration commit path "MACHINE/WEBROOT/APPHOST"
+[2026-10-16 11:10:59] [INFO] MIME: .m4a -> OK Applied configuration changes to section "system.webServer/staticContent" for "MACHINE/WEBROOT/APPHOST" at configuration commit path "MACHINE/WEBROOT/APPHOST"
+[2026-10-16 11:10:59] [INFO] Permisos de edicion para KATIUSKA\katy_ -> OK Successfully processed 63 files; Failed processing 0 files
+[2026-10-16 11:10:59] [INFO] Permisos de lectura para IIS_IUSRS -> OK Successfully processed 63 files; Failed processing 0 files
+[2026-10-16 11:10:59] [INFO] Escritura en UserImages (App Pool) -> OK Successfully processed 3 files; Failed processing 0 files
+[2026-10-16 11:10:59] [INFO] Escritura en UserImages (IUSR - identidad real de ASP) -> OK Successfully processed 3 files; Failed processing 0 files
+[2026-10-16 11:10:59] [INFO] Escritura en UserImages (IIS_IUSRS) -> OK Successfully processed 3 files; Failed processing 0 files
+[2026-10-16 11:10:59] [INFO] Escritura en PlaylistImages (App Pool) -> OK Successfully processed 7 files; Failed processing 0 files
+[2026-10-16 11:10:59] [INFO] Escritura en PlaylistImages (IUSR - identidad real de ASP) -> OK Successfully processed 7 files; Failed processing 0 files
+[2026-10-16 11:10:59] [INFO] Escritura en PlaylistImages (IIS_IUSRS) -> OK Successfully processed 7 files; Failed processing 0 files
+[2026-10-16 11:10:59] [INFO] Escritura en AlbumImages (App Pool) -> OK Successfully processed 7 files; Failed processing 0 files
+[2026-10-16 11:10:59] [INFO] Escritura en AlbumImages (IUSR - identidad real de ASP) -> OK Successfully processed 7 files; Failed processing 0 files
+[2026-10-16 11:10:59] [INFO] Escritura en AlbumImages (IIS_IUSRS) -> OK Successfully processed 7 files; Failed processing 0 files
+[2026-10-16 11:10:59] [INFO] Escritura en ArtistImages (App Pool) -> OK Successfully processed 7 files; Failed processing 0 files
+[2026-10-16 11:10:59] [INFO] Escritura en ArtistImages (IUSR - identidad real de ASP) -> OK Successfully processed 7 files; Failed processing 0 files
+[2026-10-16 11:10:59] [INFO] Escritura en ArtistImages (IIS_IUSRS) -> OK Successfully processed 7 files; Failed processing 0 files
+[2026-10-16 11:10:59] [INFO] Escritura en SongFiles (App Pool) -> OK Successfully processed 2 files; Failed processing 0 files
+[2026-10-16 11:10:59] [INFO] Escritura en SongFiles (IUSR - identidad real de ASP) -> OK Successfully processed 2 files; Failed processing 0 files
+[2026-10-16 11:10:59] [INFO] Escritura en SongFiles (IIS_IUSRS) -> OK Successfully processed 2 files; Failed processing 0 files
+[2026-10-16 11:10:59] [INFO] Iniciar app pool webapppolimusicv1_asp -> OK "webapppolimusicv1_asp" successfully started.
+[2026-10-16 11:10:59] [INFO] Estado del app pool: APPPOOL "webapppolimusicv1_asp" (MgdVersion:,MgdMode:Integrated,state:Started)
+[2026-10-16 11:10:59] [INFO] El sitio 'Default Web Site' esta iniciado
+[2026-10-16 11:10:59] [INFO] Bindings: http/*:80:
+[2026-10-16 11:10:59] [INFO] ====================================================
+[2026-10-16 11:10:59] [INFO] URL de la aplicacion: http://localhost/webapppolimusicv1_asp/
+[2026-10-16 11:10:59] [INFO] Despliegue finalizado
+[2026-10-16 11:10:59] [INFO] ====================================================
