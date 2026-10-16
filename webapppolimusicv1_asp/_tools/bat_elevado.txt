@@ -1,7 +1,0 @@
-=== webapppolimusicv1_asp desplegar.bat (ejecucion elevada) === 
-Inicio : 16/10/2026 11:10:53.47 
-Carpeta: C:\Users\katy_\git\AppWebAvKatiuskaLita\webapppolimusicv1_asp\ 
-Usuario: katy_ 
-Modo administrador: confirmado 
-Codigo de salida: 0 
-Fin: 16/10/2026 11:10:59.85 
