@@ -26,9 +26,9 @@ Function SongSelectSqlPaged(whereSql, orderSql, topN, offset, limite)
       "ISNULL((SELECT TOP 1 al.ALBUM_IMAGE_PATH FROM TBL_TRACKLIST t " & _
       "        JOIN TBL_ALBUM al ON al.ID_ALBUM = t.ID_ALBUM " & _
       "        WHERE t.ID_SONG = s.ID_SONG ORDER BY al.ID_ALBUM),'') AS COVER, " & _
-      "ISNULL(STUFF((SELECT ', ' + a.ARTIST_NAME + ISNULL(' ' + a.ARTIST_LASTNAME,'') " & _
-      "              FROM TBL_PLAYER p JOIN TBL_ARTIST a ON a.ID_ARTIST = p.ID_ARTIST " & _
-      "              WHERE p.ID_SONG = s.ID_SONG FOR XML PATH('')),1,2,''),'') AS ARTISTS " & _
+      "CAST(ISNULL((SELECT STRING_AGG(a.ARTIST_NAME + ISNULL(' ' + a.ARTIST_LASTNAME,''), ', ') " & _
+      "             FROM TBL_PLAYER p JOIN TBL_ARTIST a ON a.ID_ARTIST = p.ID_ARTIST " & _
+      "             WHERE p.ID_SONG = s.ID_SONG),'') AS varchar(1000)) AS ARTISTS " & _
       "FROM TBL_SONG s "
   If Len(whereSql) > 0 Then s = s & "WHERE " & whereSql & " "
   If Len(orderSql) > 0 Then s = s & "ORDER BY " & orderSql & " "
@@ -56,13 +56,12 @@ Function AlbumSelectSqlPaged(whereSql, orderSql, topN, offset, limite)
   End If
   s = s & "al.ID_ALBUM, al.TITLE_ALBUM, al.RELEASE_YEAR, al.ALBUM_IMAGE_PATH, " & _
       "(SELECT COUNT(*) FROM TBL_TRACKLIST t WHERE t.ID_ALBUM = al.ID_ALBUM) AS TRACKS, " & _
-      "ISNULL(STUFF((SELECT ', ' + ar.ARTIST_NAME + ISNULL(' ' + ar.ARTIST_LASTNAME,'') " & _
-      "              FROM TBL_TRACKLIST t2 " & _
-      "              JOIN TBL_PLAYER p ON p.ID_SONG = t2.ID_SONG " & _
-      "              JOIN TBL_ARTIST ar ON ar.ID_ARTIST = p.ID_ARTIST " & _
-      "              WHERE t2.ID_ALBUM = al.ID_ALBUM " & _
-      "              GROUP BY ar.ARTIST_NAME, ar.ARTIST_LASTNAME " & _
-      "              FOR XML PATH('')),1,2,''),'') AS ARTISTS " & _
+      "CAST(ISNULL((SELECT STRING_AGG(n.ARTISTA, ', ') " & _
+      "             FROM (SELECT DISTINCT ar.ARTIST_NAME + ISNULL(' ' + ar.ARTIST_LASTNAME,'') AS ARTISTA " & _
+      "                   FROM TBL_TRACKLIST t2 " & _
+      "                   JOIN TBL_PLAYER p ON p.ID_SONG = t2.ID_SONG " & _
+      "                   JOIN TBL_ARTIST ar ON ar.ID_ARTIST = p.ID_ARTIST " & _
+      "                   WHERE t2.ID_ALBUM = al.ID_ALBUM) n),'') AS varchar(1000)) AS ARTISTS " & _
       "FROM TBL_ALBUM al "
   If Len(whereSql) > 0 Then s = s & "WHERE " & whereSql & " "
   If Len(orderSql) > 0 Then s = s & "ORDER BY " & orderSql & " "

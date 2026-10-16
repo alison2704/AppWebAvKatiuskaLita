@@ -368,6 +368,18 @@
 
     function load(t, autoplay, position) {
       if (!t) { return; }
+
+      // Cancion sin archivo de audio disponible en el servidor
+      if (!t.url) {
+        audio.pause();
+        audio.removeAttribute("src");
+        try { audio.load(); } catch (e) { /* ignorar */ }
+        render();
+        toast('El archivo de audio de "' + (t.title || "esta cancion") +
+              '" no esta disponible en el servidor.', true);
+        return;
+      }
+
       audio.src = t.url;
       audio.load();
       if (autoplay) { countPlay(t.id); }

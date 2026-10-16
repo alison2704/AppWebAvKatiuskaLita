@@ -164,6 +164,7 @@ End Function
 Function H(v)
   Dim s
   s = CStr("" & v)
+  s = Replace(s, vbNullChar, "")
   s = Replace(s, "&", "&amp;")
   s = Replace(s, "<", "&lt;")
   s = Replace(s, ">", "&gt;")
@@ -353,16 +354,25 @@ Function TakeFlashTipo()
 End Function
 
 ' ---------------------- JSON ----------------------------------------
+' Escapa un valor para incrustarlo en JSON.  Ademas elimina cualquier
+' caracter de control (incluido el byte nulo) porque romperia tanto el
+' JSON como el atributo HTML que lo contiene.
 Function Js(v)
-  Dim s
+  Dim s, i, c, ch, res
   s = CStr("" & v)
   s = Replace(s, "\", "\\")
   s = Replace(s, """", "\""")
-  s = Replace(s, vbCrLf, " ")
-  s = Replace(s, vbCr, " ")
-  s = Replace(s, vbLf, " ")
-  s = Replace(s, vbTab, " ")
-  Js = s
+  res = ""
+  For i = 1 To Len(s)
+    c  = Mid(s, i, 1)
+    ch = AscW(c)
+    If ch < 32 Then
+      res = res & " "
+    Else
+      res = res & c
+    End If
+  Next
+  Js = res
 End Function
 
 ' =====================================================================
