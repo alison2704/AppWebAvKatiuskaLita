@@ -2,4 +2,6 @@
 .workbuddy-ai
 bin
 obj
+packages
 *.csproj.user
+*.suo

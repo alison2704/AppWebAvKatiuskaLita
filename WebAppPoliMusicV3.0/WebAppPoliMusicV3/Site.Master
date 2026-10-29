@@ -1,0 +1,60 @@
+﻿<%@ Master Language="C#" AutoEventWireup="true" CodeBehind="Site.master.cs" Inherits="WebAppPoliMusicV3.SiteMaster" %>
+
+<!DOCTYPE html>
+
+<html lang="es">
+<head runat="server">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%: Page.Title %> - PoliMusic</title>
+
+    <%-- Se mantiene el bundle original del proyecto (bootstrap + Site.css) --%>
+    <webopt:bundlereference runat="server" path="~/Content/css" />
+    <%-- Tema PoliMusic (Spotify en rojo) --%>
+    <link href="<%: ResolveUrl("~/Content/polimusic.css") %>" rel="stylesheet" />
+    <link href="~/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+
+    <asp:ContentPlaceHolder ID="HeadContent" runat="server">
+    </asp:ContentPlaceHolder>
+</head>
+<body>
+    <form id="formMain" runat="server">
+        <div class="pm-app">
+
+            <aside class="pm-sidebar">
+                <a class="pm-brand" href="<%: ResolveUrl("~/Default.aspx") %>">
+                    <span class="pm-brand-dot"></span>PoliMusic
+                </a>
+
+                <nav class="pm-nav">
+                    <asp:HyperLink ID="lnkHome" runat="server" NavigateUrl="~/Default.aspx" Text="Inicio" />
+                    <asp:HyperLink ID="lnkSongs" runat="server" NavigateUrl="~/Song.aspx" Text="Canciones" />
+                    <asp:HyperLink ID="lnkAbout" runat="server" NavigateUrl="~/About.aspx" Text="Acerca de" />
+                    <asp:HyperLink ID="lnkContact" runat="server" NavigateUrl="~/Contact.aspx" Text="Contacto" />
+
+
+                </nav>
+
+                <div class="pm-sidebar-foot">
+                    <div class="pm-user-row">
+                        <div class="pm-avatar"><asp:Literal ID="litUserInitial" runat="server" /></div>
+                        <div>
+                            <div class="pm-user-name"><asp:Label ID="lblSessionUser" runat="server" /></div>
+                            <div class="pm-user-role"><asp:Label ID="lblSessionRole" runat="server" /></div>
+                        </div>
+                    </div>
+                    <a class="pm-logout" href="<%: ResolveUrl("~/Logout.aspx") %>">Cerrar sesión</a>
+                </div>
+            </aside>
+
+            <div class="pm-main">
+                <asp:ContentPlaceHolder ID="MainContent" runat="server">
+                </asp:ContentPlaceHolder>
+            </div>
+
+        </div>
+    </form>
+
+    <script src="<%: ResolveUrl("~/Scripts/bootstrap.bundle.min.js") %>"></script>
+</body>
+</html>

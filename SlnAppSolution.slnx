@@ -1,3 +1,11 @@
 <Solution>
-  <Project Path="WebPoliMusicV2/WebPoliMusicV2.csproj" Id="8aaa5785-97e3-4d08-876f-cc8db28aac58" />
+  <Folder Name="/WebAppPoliMusicV2_ASPX_F2.0/">
+    <Project Path="WebPoliMusicV2/WebPoliMusicV2.csproj" Id="8aaa5785-97e3-4d08-876f-cc8db28aac58" />
+  </Folder>
+  <Folder Name="/WebAppPoliMusicV3_ASPX_F4.8_NLAYER/">
+    <Project Path="WebAppPoliMusicV3.0/BLL.PoliMusicV3/BLL.PoliMusicV3.csproj" Id="21115873-b7b5-409c-831d-82a18a9ba213" />
+    <Project Path="WebAppPoliMusicV3.0/DAL.PoliMusicV3/DAL.PoliMusicV3.csproj" Id="3ab3d078-6ac6-4009-a376-4593673760e6" />
+    <Project Path="WebAppPoliMusicV3.0/EntityLayer.PoliMusicV3/EntityLayer.PoliMusicV3.csproj" Id="ebfa63e1-0a9d-411d-8474-b69a8427ca82" />
+    <Project Path="WebAppPoliMusicV3.0/WebAppPoliMusicV3/WebAppPoliMusicV3.csproj" Id="b2f01456-c027-4712-9c6c-30705da2d737" />
+  </Folder>
 </Solution>
