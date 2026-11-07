@@ -1,37 +1,49 @@
 /* ============================================
-   CHAT.JS - Logica del cliente WebSocket
+   CHAT.JS - Cliente WebSocket con autenticacion Firebase
    ============================================ */
 
 // --- Limites ---
 const MAX_MESSAGE_LENGTH = 500;
-const MAX_USERNAME_LENGTH = 20;
 const RECONNECT_DELAY = 3000;
 const TYPING_TIMEOUT = 3000;
 
 // --- Estado global ---
 let ws = null;
 let myUsername = '';
+let myEmail = '';
 let isConnected = false;
+let isAuthenticating = false;
 let reconnectTimer = null;
 let typingTimer = null;
 let isTypingSent = false;
 let typingUsers = new Set();
+let idToken = null;
 
 // --- Referencias del DOM ---
 const messagesArea = document.getElementById('messagesArea');
 const messagesList = document.getElementById('messagesList');
 const messageInput = document.getElementById('messageInput');
 const sendBtn = document.getElementById('sendBtn');
-const usernameInput = document.getElementById('usernameInput');
-const joinBtn = document.getElementById('joinBtn');
-const loginOverlay = document.getElementById('loginOverlay');
-const loginError = document.getElementById('loginError');
 const statusDot = document.getElementById('statusDot');
 const statusText = document.getElementById('statusText');
 const userCountEl = document.getElementById('userCount');
 const themeToggle = document.getElementById('themeToggle');
 const typingIndicator = document.getElementById('typingIndicator');
 const typingText = document.getElementById('typingText');
+const loginOverlay = document.getElementById('loginOverlay');
+const loginError = document.getElementById('loginError');
+const loginInfo = document.getElementById('loginInfo');
+const logoutBtn = document.getElementById('logoutBtn');
+
+// Formularios auth
+const loginForm = document.getElementById('loginForm');
+const registerForm = document.getElementById('registerForm');
+const tabLogin = document.getElementById('tabLogin');
+const tabRegister = document.getElementById('tabRegister');
+const emailInput = document.getElementById('emailInput');
+const passwordInput = document.getElementById('passwordInput');
+const regEmailInput = document.getElementById('regEmailInput');
+const regPasswordInput = document.getElementById('regPasswordInput');
 
 // ============================================
 // TEMA CLARO / OSCURO
@@ -39,11 +51,7 @@ const typingText = document.getElementById('typingText');
 
 function initTheme() {
     const savedTheme = localStorage.getItem('chat-theme');
-    if (savedTheme === 'dark') {
-        document.documentElement.setAttribute('data-theme', 'dark');
-    } else {
-        document.documentElement.setAttribute('data-theme', 'light');
-    }
+    document.documentElement.setAttribute('data-theme', savedTheme === 'dark' ? 'dark' : 'light');
 }
 
 function toggleTheme() {
@@ -56,12 +64,33 @@ function toggleTheme() {
 themeToggle.addEventListener('click', toggleTheme);
 
 // ============================================
+// TABS LOGIN / REGISTRO
+// ============================================
+
+tabLogin.addEventListener('click', () => {
+    tabLogin.classList.add('active');
+    tabRegister.classList.remove('active');
+    loginForm.style.display = 'block';
+    registerForm.style.display = 'none';
+    loginError.textContent = '';
+    loginInfo.textContent = '';
+});
+
+tabRegister.addEventListener('click', () => {
+    tabRegister.classList.add('active');
+    tabLogin.classList.remove('active');
+    registerForm.style.display = 'block';
+    loginForm.style.display = 'none';
+    loginError.textContent = '';
+    loginInfo.textContent = '';
+});
+
+// ============================================
 // ESTADO DE CONEXION
 // ============================================
 
 function setConnectionState(state) {
     statusDot.className = 'status-dot ' + state;
-
     switch (state) {
         case 'connected':
             statusText.textContent = 'Conectado';
@@ -76,51 +105,160 @@ function setConnectionState(state) {
 }
 
 // ============================================
-// LOGIN / JOIN
+// AUTENTICACION CON FIREBASE
 // ============================================
 
-function handleJoin() {
-    const username = usernameInput.value.trim();
-
-    if (!username) {
-        loginError.textContent = 'Por favor ingresa tu nombre.';
-        usernameInput.focus();
-        return;
-    }
-
-    if (username.length > MAX_USERNAME_LENGTH) {
-        loginError.textContent = `Maximo ${MAX_USERNAME_LENGTH} caracteres.`;
-        return;
-    }
-
-    myUsername = username;
-
-    if (isConnected && ws && ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({
-            type: 'join',
-            username: myUsername
-        }));
-    }
-
-    loginOverlay.classList.add('hidden');
-    messageInput.disabled = false;
-    sendBtn.disabled = false;
-    messageInput.focus();
+// Esperar a que auth.js cargue firebaseAuth en window
+function waitForFirebaseAuth() {
+    return new Promise((resolve) => {
+        if (window.firebaseAuth) {
+            resolve(window.firebaseAuth);
+        } else {
+            const interval = setInterval(() => {
+                if (window.firebaseAuth) {
+                    clearInterval(interval);
+                    resolve(window.firebaseAuth);
+                }
+            }, 100);
+        }
+    });
 }
 
-joinBtn.addEventListener('click', handleJoin);
+async function initAuth() {
+    const { auth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } = await waitForFirebaseAuth();
 
-usernameInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-        handleJoin();
-    }
-});
+    // Escectar cambios de estado de autenticacion
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            // Usuario logueado - obtener token
+            idToken = await user.getIdToken();
+            myEmail = user.email;
+            loginOverlay.classList.add('hidden');
+            logoutBtn.style.display = 'flex';
+            loginError.textContent = ''; // limpiar errores previos
+
+            // Conectar WebSocket
+            connect();
+        } else {
+            // Usuario no logueado
+            idToken = null;
+            myEmail = '';
+            loginOverlay.classList.remove('hidden');
+            logoutBtn.style.display = 'none';
+
+            if (ws) {
+                ws.close();
+                ws = null;
+            }
+        }
+    });
+
+    // Login form
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        loginError.textContent = '';
+        loginInfo.textContent = 'Iniciando sesion...';
+
+        const email = emailInput.value.trim();
+        const password = passwordInput.value.trim();
+
+        if (!email || !password) {
+            loginError.textContent = 'Completa todos los campos.';
+            loginInfo.textContent = '';
+            return;
+        }
+
+        // Timeout de seguridad: si Firebase no responde en 10s
+        const timeoutId = setTimeout(() => {
+            loginInfo.textContent = '';
+            loginError.textContent = 'El login esta tardando demasiado. Prueba desactivar la prevencion de rastreo de Edge o usa Chrome.';
+        }, 10000);
+
+        try {
+            await signInWithEmailAndPassword(auth, email, password);
+            clearTimeout(timeoutId);
+            loginInfo.textContent = '';
+        } catch (error) {
+            clearTimeout(timeoutId);
+            console.error('Error login Firebase:', error.code, error.message);
+            loginInfo.textContent = '';
+            loginError.textContent = translateFirebaseError(error.code, error.message);
+        }
+    });
+
+    // Register form
+    registerForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        loginError.textContent = '';
+        loginInfo.textContent = 'Creando cuenta...';
+
+        const email = regEmailInput.value.trim();
+        const password = regPasswordInput.value.trim();
+
+        if (!email || !password) {
+            loginError.textContent = 'Completa todos los campos.';
+            loginInfo.textContent = '';
+            return;
+        }
+
+        if (password.length < 6) {
+            loginError.textContent = 'La contrasena debe tener al menos 6 caracteres.';
+            loginInfo.textContent = '';
+            return;
+        }
+
+        // Timeout de seguridad
+        const timeoutId = setTimeout(() => {
+            loginInfo.textContent = '';
+            loginError.textContent = 'El registro esta tardando demasiado. Prueba desactivar la prevencion de rastreo de Edge o usa Chrome.';
+        }, 10000);
+
+        try {
+            await createUserWithEmailAndPassword(auth, email, password);
+            clearTimeout(timeoutId);
+            loginInfo.textContent = '';
+        } catch (error) {
+            clearTimeout(timeoutId);
+            console.error('Error registro Firebase:', error.code, error.message);
+            loginInfo.textContent = '';
+            loginError.textContent = translateFirebaseError(error.code, error.message);
+        }
+    });
+
+    // Logout
+    logoutBtn.addEventListener('click', async () => {
+        try {
+            await signOut(auth);
+        } catch (error) {
+            console.error('Error al cerrar sesion:', error);
+        }
+    });
+}
+
+// Traducir codigos de error de Firebase
+function translateFirebaseError(code, message = '') {
+    const errors = {
+        'auth/invalid-email': 'Correo electronico invalido.',
+        'auth/user-disabled': 'Esta cuenta ha sido deshabilitada.',
+        'auth/user-not-found': 'No existe una cuenta con este correo.',
+        'auth/wrong-password': 'Contrasena incorrecta.',
+        'auth/email-already-in-use': 'Ya existe una cuenta con este correo.',
+        'auth/weak-password': 'La contrasena es demasiado debil (min 6 caracteres).',
+        'auth/invalid-credential': 'Credenciales invalidas. Verifica tu correo y contrasena.',
+        'auth/too-many-requests': 'Demasiados intentos. Intenta mas tarde.',
+        'auth/network-request-failed': 'Error de red. Verifica tu conexion.',
+        'auth/api-key-not-valid': 'La API key de Firebase no es valida. Revisa la configuracion.',
+    };
+    return errors[code] || `Ocurrio un error (${code}): ${message || 'Intenta de nuevo.'}`;
+}
 
 // ============================================
 // CONEXION WEBSOCKET
 // ============================================
 
 function connect() {
+    if (!idToken) return;
+
     setConnectionState('reconnecting');
 
     const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -130,13 +268,11 @@ function connect() {
         isConnected = true;
         setConnectionState('connected');
 
-        // Si ya tenemos username, re-enviar join
-        if (myUsername) {
-            ws.send(JSON.stringify({
-                type: 'join',
-                username: myUsername
-            }));
-        }
+        // Enviar token JWT para autenticar la conexion
+        ws.send(JSON.stringify({
+            type: 'auth',
+            token: idToken
+        }));
     };
 
     ws.onmessage = (event) => {
@@ -148,15 +284,32 @@ function connect() {
         }
     };
 
-    ws.onclose = () => {
+    ws.onclose = async (event) => {
         isConnected = false;
         setConnectionState('disconnected');
         messageInput.disabled = true;
         sendBtn.disabled = true;
 
+        // Si fue cerrado por auth invalida, no reconectar
+        if (event.code === 4003 || event.code === 4002) {
+            loginOverlay.classList.remove('hidden');
+            logoutBtn.style.display = 'none';
+            ws = null;
+            // Forzar cierre de sesion en Firebase para evitar bucle
+            try {
+                await signOut(auth);
+            } catch (e) {}
+            loginError.textContent = 'Sesion invalida. Inicia sesion de nuevo.';
+            return;
+        }
+
         // Reconectar automaticamente
         clearTimeout(reconnectTimer);
-        reconnectTimer = setTimeout(connect, RECONNECT_DELAY);
+        reconnectTimer = setTimeout(() => {
+            if (idToken) {
+                connect();
+            }
+        }, RECONNECT_DELAY);
         setConnectionState('reconnecting');
     };
 
@@ -171,6 +324,24 @@ function connect() {
 
 function handleMessage(msg) {
     switch (msg.type) {
+        case 'authRequired':
+            // El servidor pide autenticacion - ya enviamos el token en onopen
+            break;
+
+        case 'authSuccess':
+            myUsername = msg.username;
+            messageInput.disabled = false;
+            sendBtn.disabled = false;
+            messageInput.focus();
+            break;
+
+        case 'history':
+            // Cargar mensajes del historial
+            if (msg.messages && msg.messages.length > 0) {
+                msg.messages.forEach((m) => addChatMessage(m, true));
+            }
+            break;
+
         case 'message':
             addChatMessage(msg);
             break;
@@ -197,12 +368,15 @@ function handleMessage(msg) {
 // RENDERIZAR MENSAJES
 // ============================================
 
-function addChatMessage(msg) {
+function addChatMessage(msg, isHistory = false) {
     const isOwn = msg.username === myUsername;
     const bubble = document.createElement('div');
     bubble.className = 'message-bubble ' + (isOwn ? 'message-sent' : 'message-received');
 
-    // Escapar HTML para prevenir XSS
+    if (isHistory) {
+        bubble.style.opacity = '0.7';
+    }
+
     const safeUsername = escapeHtml(msg.username);
     const safeText = escapeHtml(msg.text);
 
@@ -222,7 +396,9 @@ function addSystemMessage(msg) {
 
     const icon = msg.subtype === 'join'
         ? '<span class="sys-icon">&#10148;</span>'
-        : '<span class="sys-icon">&#10006;</span>';
+        : msg.subtype === 'leave'
+        ? '<span class="sys-icon">&#10006;</span>'
+        : '<span class="sys-icon">&#9998;</span>';
 
     sysDiv.innerHTML = `${icon} ${escapeHtml(msg.text)} <span class="msg-timestamp">${msg.timestamp || ''}</span>`;
 
@@ -236,8 +412,6 @@ function addErrorMessage(text) {
     errDiv.textContent = text;
     messagesList.appendChild(errDiv);
     scrollToBottom();
-
-    // Remover despues de 3 segundos
     setTimeout(() => errDiv.remove(), 3000);
 }
 
@@ -271,7 +445,6 @@ function updateTypingIndicator() {
         }
         typingIndicator.style.display = 'flex';
     }
-
     scrollToBottom();
 }
 
@@ -282,12 +455,8 @@ function updateTypingIndicator() {
 function sendMessage() {
     const text = messageInput.value.trim();
 
-    // Validar mensaje vacio
-    if (!text) {
-        return;
-    }
+    if (!text) return;
 
-    // Validar mensaje demasiado largo
     if (text.length > MAX_MESSAGE_LENGTH) {
         addErrorMessage(`El mensaje es demasiado largo (maximo ${MAX_MESSAGE_LENGTH} caracteres).`);
         return;
@@ -298,13 +467,11 @@ function sendMessage() {
         return;
     }
 
-    // Enviar como JSON
     ws.send(JSON.stringify({
         type: 'message',
         text: text
     }));
 
-    // Limpiar input y detener indicador typing
     messageInput.value = '';
     stopTyping();
 }
@@ -319,7 +486,6 @@ messageInput.addEventListener('input', () => {
     if (!isConnected || !ws || ws.readyState !== WebSocket.OPEN) return;
     if (!myUsername) return;
 
-    // Si no hemos enviado "typing", enviarlo
     if (!isTypingSent) {
         ws.send(JSON.stringify({
             type: 'typing',
@@ -328,7 +494,6 @@ messageInput.addEventListener('input', () => {
         isTypingSent = true;
     }
 
-    // Reiniciar timer: si deja de escribir por 3s, enviar "stop typing"
     clearTimeout(typingTimer);
     typingTimer = setTimeout(stopTyping, TYPING_TIMEOUT);
 });
@@ -344,7 +509,6 @@ function stopTyping() {
     isTypingSent = false;
 }
 
-// Enter para enviar
 messageInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
         sendMessage();
@@ -372,5 +536,4 @@ function escapeHtml(str) {
 // ============================================
 
 initTheme();
-connect();
-usernameInput.focus();
+initAuth();
